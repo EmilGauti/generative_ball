@@ -1,0 +1,7 @@
+runs/
+Archive.zip
+archive/
+__pycache__/
+video/
+test2.ipynb
+.DS_Store
