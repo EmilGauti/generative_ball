@@ -43,25 +43,28 @@ class DQN:
         # The first layer has the same size as a state size
         # The last layer has the size of actions space
 
-        self.model = UNet_emil(4,1)#network(self.state_size, self.action_size)
+        self.model = UNet_emil(3,1)#network(self.state_size, self.action_size)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
         self.criterion = nn.MSELoss()
         
-    def compute_action(self, current_state):
+    def compute_action(self, current_state,explore=True):
         # We sample a variable uniformly over [0,1]
         # if the variable is less than the exploration probability
         #     we choose an action randomly
         # else
         #     we forward the state through the DNN and choose the action 
         #     with the highest Q-value.
-        if np.random.uniform(0,1) < self.exploration_proba:
+        if explore:
+            if np.random.uniform(0,1) < self.exploration_proba:
 
-            return np.random.choice(range(self.n_actions))
+                return np.random.choice(range(self.n_actions))
         if torch.is_tensor(current_state) == False:
             current_state = torch.tensor(current_state, dtype=torch.float32).unsqueeze(0)
-        q_values = self.model(current_state)[0]
+        pred_frame, q_values = self.model(current_state)
+        self.pred_frame = pred_frame
+        print(pred_frame)
 
-        return torch.argmax(q_values).item()
+        return torch.argmax(q_values[0]).item()
     
     def update_exploration_probability(self):
         self.exploration_proba = self.exploration_proba * np.exp(-self.exploration_proba_decay)
@@ -93,7 +96,7 @@ class DQN:
         return loss
     def train(self):
         # We shuffle the memory buffer and select a batch size of experiences
-        #np.random.shuffle(self.memory_buffer)
+        np.random.shuffle(self.memory_buffer)
         batch_sample = self.memory_buffer[0:self.batch_size]
         
         loss=0
@@ -102,16 +105,17 @@ class DQN:
             tmp = experience["current_state"]
             if torch.is_tensor(tmp) == False:
                 tmp=torch.tensor(tmp, dtype=torch.float32).unsqueeze(0)
-            q_current_state = self.model(tmp)
+            pred_frame,q_current_state = self.model(tmp)
             
             # We compute the Q-target using Bellman optimality equation
             q_target = experience["reward"]
             if not experience["done"]:
                 tmp=torch.tensor(experience["next_state"], dtype=torch.float32).unsqueeze(0)
-                q_target = q_target + self.gamma*torch.max(self.model(tmp)[0])
+                pred_frame, model_output =self.model(tmp)
+                q_target = q_target + self.gamma*torch.max(model_output[0])
 
-
-            q_current_state[0][0][experience["action"]] = q_target
+            
+            q_current_state[0][experience["action"]] = q_target
 
             loss+=self.train_step(experience["current_state"], q_current_state, verbose=self.verbose)
         return loss

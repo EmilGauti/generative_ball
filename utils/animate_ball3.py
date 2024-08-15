@@ -173,6 +173,7 @@ class DrawSpace():
         self.player_color = player_color
         self.obstacle_color = obstacle_color
         self.boundary_color = boundary_color
+    
 
     def refresh_frame(self,gs):
         self.frames = np.zeros(gs.framesize, np.uint8)
@@ -214,7 +215,32 @@ class BreakoutGame():
             plt.pause(0.03)
             plt.clf()
 
-    def rl_refresh_frame(self,action):
+    def rl_refresh_frame(self,action,current_state):
+        self.gs.move_ball()
+        self.gs.player_direction=action
+        self.gs.move_player()
+        self.has_ended = self.gs.has_ended
+        self.ds.refresh_frame(self.gs)
+        new_frame = np.expand_dims(self.ds.frames, axis=0)
+        next_state = np.concatenate((current_state[1:],new_frame),axis=0)
+
+        reward=0
+        try:
+            reward += 1/(abs(self.gs.player_position[0]-self.gs.balls[0].x)+0.01)
+            #print(reward,abs(self.gs.player_position[0]-self.gs.balls[0].x))
+        except:
+            reward=0
+        for i in range(len(self.gs.balls)):
+            reward+=self.gs.balls[i].player_bounced
+
+        return next_state,reward,self.has_ended
+    def get_initial_state(self,nr_frames=3):
+        frames=[]
+        for i in range(nr_frames):
+            frame=self.refresh_frame()
+            frames.append(frame)
+        return frames
+    def rl_refresh_frame_old(self,action):
         self.gs.move_ball()
         self.gs.player_direction=action
         self.gs.move_player()
@@ -223,7 +249,7 @@ class BreakoutGame():
         reward=0
         try:
             reward += 1/(abs(self.gs.player_position[0]-self.gs.balls[0].x)+0.01)
-            print(reward,abs(self.gs.player_position[0]-self.gs.balls[0].x))
+            #print(reward,abs(self.gs.player_position[0]-self.gs.balls[0].x))
         except:
             reward=0
         for i in range(len(self.gs.balls)):
