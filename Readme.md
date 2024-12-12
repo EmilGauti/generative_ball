@@ -5,5 +5,8 @@ In this project I develop an agent using Deep-Q-Network(DQN) that can play a cus
 
 ![model](generative_ball_model.drawio.png)
 
+![Description of the GIF](output.gif)
+
+
 # How to use
 This is work in progress and still quite raw. The functionality can be explored via the jupyter notebooks.
