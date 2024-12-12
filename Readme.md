@@ -5,7 +5,12 @@ In this project I develop an agent using Deep-Q-Network(DQN) that can play a cus
 
 ![model](generative_ball_model.drawio.png)
 
-![Description of the GIF](output.gif)
+Below is a demo of an early version of the frame prediction. It fails in breaking the blocks when hitting from the corners but works as expected when bouncing of walls and breaks blocks when hitting them on the side.
+![V0 of frame prediction](output.gif)
+
+Next step is simulating the game "Breakout" in python. We need to first create a human playable version of the game and then allow a reinforcement learning agent to take the wheel.
+
+![Breakout human playable](human_playable_breakout.gif)
 
 
 # How to use
